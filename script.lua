@@ -1,6 +1,6 @@
 --[[
     YBA Dark Ice - standalone executor script
-    Version: 1.1.0
+    Version: 1.2.0 - startup/UI diagnostics
     UI: native Roblox instances; no external UI library / HttpGet dependency.
 
     Compatibility note:
@@ -8,21 +8,43 @@
     may prevent or reset some effects. The script does not include anti-cheat bypasses.
 ]]
 
+
+local function bootDarkIce()
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
+-- Xeno may execute before LocalPlayer/PlayerGui are fully available.
 local LocalPlayer = Players.LocalPlayer
+local deadline = os.clock() + 15
+while not LocalPlayer and os.clock() < deadline do
+    task.wait(0.1)
+    LocalPlayer = Players.LocalPlayer
+end
 if not LocalPlayer then
-    warn("[Dark Ice] LocalPlayer is unavailable.")
-    return
+    error("LocalPlayer was not ready after 15 seconds. Execute again after fully joining YBA.")
 end
 
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-local OldGui = PlayerGui:FindFirstChild("DarkIceUI")
-if OldGui then OldGui:Destroy() end
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 15)
+if not PlayerGui then
+    error("PlayerGui did not load. Execute again after the game has finished loading.")
+end
+
+-- Prefer the executor UI container when available, then fall back to PlayerGui.
+local GuiParent = PlayerGui
+if type(gethui) == "function" then
+    local ok, container = pcall(gethui)
+    if ok and typeof(container) == "Instance" then
+        GuiParent = container
+    end
+end
+
+for _, container in ipairs({PlayerGui, GuiParent}) do
+    local old = container:FindFirstChild("DarkIceUI")
+    if old then pcall(function() old:Destroy() end) end
+end
 
 local Theme = {
     Background = Color3.fromRGB(11, 16, 27),
@@ -86,9 +108,11 @@ end
 local Gui = Instance.new("ScreenGui")
 Gui.Name = "DarkIceUI"
 Gui.ResetOnSpawn = false
-Gui.IgnoreGuiInset = false
+Gui.IgnoreGuiInset = true
 Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-Gui.Parent = PlayerGui
+Gui.DisplayOrder = 100000
+Gui.Enabled = true
+Gui.Parent = GuiParent
 
 local Main = Instance.new("Frame")
 Main.Name = "Main"
@@ -707,4 +731,72 @@ Gui.AncestryChanged:Connect(function(_, parent)
     end
 end)
 
-print("[Dark Ice] Loaded. RightShift toggles the UI.")
+print("[Dark Ice] UI created in " .. GuiParent:GetFullName() .. ". RightShift toggles the UI.")
+
+end -- bootDarkIce
+
+local ok, err = xpcall(bootDarkIce, function(message)
+    local trace = (debug and debug.traceback) and debug.traceback(tostring(message), 2) or tostring(message)
+    return trace
+end)
+if not ok then
+    warn("[Dark Ice] Startup failed: " .. tostring(err))
+
+    -- Try to show the failure on-screen instead of silently leaving no UI.
+    pcall(function()
+        local Players = game:GetService("Players")
+        local player = Players.LocalPlayer
+        local target
+        if type(gethui) == "function" then
+            local good, result = pcall(gethui)
+            if good and typeof(result) == "Instance" then target = result end
+        end
+        if not target and player then target = player:FindFirstChildOfClass("PlayerGui") end
+        if not target then target = game:GetService("CoreGui") end
+        local old = target:FindFirstChild("DarkIceError")
+        if old then old:Destroy() end
+
+        local screen = Instance.new("ScreenGui")
+        screen.Name = "DarkIceError"
+        screen.ResetOnSpawn = false
+        screen.DisplayOrder = 100001
+        screen.IgnoreGuiInset = true
+        screen.Parent = target
+
+        local panel = Instance.new("Frame")
+        panel.AnchorPoint = Vector2.new(0.5, 0.5)
+        panel.Position = UDim2.fromScale(0.5, 0.5)
+        panel.Size = UDim2.fromOffset(430, 150)
+        panel.BackgroundColor3 = Color3.fromRGB(18, 24, 37)
+        panel.BorderSizePixel = 0
+        panel.Parent = screen
+        Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 10)
+        local stroke = Instance.new("UIStroke", panel)
+        stroke.Color = Color3.fromRGB(255, 100, 110)
+        stroke.Thickness = 1.5
+
+        local title = Instance.new("TextLabel")
+        title.BackgroundTransparency = 1
+        title.Position = UDim2.fromOffset(14, 10)
+        title.Size = UDim2.new(1, -28, 0, 28)
+        title.Font = Enum.Font.GothamBold
+        title.Text = "DARK ICE — STARTUP ERROR"
+        title.TextColor3 = Color3.fromRGB(255, 115, 125)
+        title.TextSize = 15
+        title.TextXAlignment = Enum.TextXAlignment.Left
+        title.Parent = panel
+
+        local message = Instance.new("TextLabel")
+        message.BackgroundTransparency = 1
+        message.Position = UDim2.fromOffset(14, 42)
+        message.Size = UDim2.new(1, -28, 1, -52)
+        message.Font = Enum.Font.Code
+        message.Text = string.sub(tostring(err), 1, 650)
+        message.TextColor3 = Color3.fromRGB(225, 238, 252)
+        message.TextSize = 11
+        message.TextWrapped = true
+        message.TextXAlignment = Enum.TextXAlignment.Left
+        message.TextYAlignment = Enum.TextYAlignment.Top
+        message.Parent = panel
+    end)
+end
