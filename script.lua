@@ -1,5 +1,5 @@
 -- =======================================================
--- ❄️ CIRNO HUB V2 - YBA EDITION (TWEEN ITEM & COMBAT) ❄️
+-- ❄️ CIRNO HUB V2 - YBA EDITION (TWEEN & AUTO PICKUP) ❄️
 -- Created for: Cirno Hub / Doge8
 -- Toggle Key: Right Shift (Shift Phải)
 -- =======================================================
@@ -33,6 +33,7 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
 -- Biến chức năng
@@ -202,7 +203,7 @@ RunService.Heartbeat:Connect(function()
 end)
 
 -- =======================================================
--- TAB 2: ITEM & TỰ ĐỘNG (TWEEN TỚI ITEM & ESP)
+-- TAB 2: ITEM & TỰ ĐỘNG (TWEEN & AUTO PICKUP)
 -- =======================================================
 
 ItemTab:AddToggle({
@@ -272,7 +273,7 @@ ItemTab:AddSlider({
 })
 
 ItemTab:AddToggle({
-    Name = "Auto Teleport / Tween lượm Item (Smooth)",
+    Name = "Auto Tween & Pickup Item (Tự bay & Lượm đồ)",
     Default = false,
     Callback = function(Value)
         isItemTween = Value
@@ -288,12 +289,26 @@ ItemTab:AddToggle({
                                 if obj.Name == "Arrow" or obj.Name == "Rokakaka" or obj.Name == "Mysterious Arrow" or obj.Name == "RIP Diary" or obj.Name == "Pure Rokakaka" then
                                     local handle = obj:FindFirstChild("Handle") or obj:FindFirstChildOfClass("BasePart")
                                     if handle then
+                                        -- 1. BAY ĐẾN VỊ TRÍ ITEM
                                         local distance = (hrp.Position - handle.Position).Magnitude
                                         local time = distance / itemTweenSpeed
                                         local info = TweenInfo.new(time, Enum.EasingStyle.Linear)
-                                        local tween = TweenService:Create(hrp, info, {CFrame = handle.CFrame + Vector3.new(0, 3, 0)})
+                                        local tween = TweenService:Create(hrp, info, {CFrame = handle.CFrame + Vector3.new(0, 2, 0)})
                                         tween:Play()
                                         tween.Completed:Wait()
+                                        
+                                        -- 2. TỰ ĐỘNG KÍCH HOẠT LƯỢM ITEM (AUTO PICKUP)
+                                        task.wait(0.1)
+                                        local cd = obj:FindFirstChildOfClass("ClickDetector") or handle:FindFirstChildOfClass("ClickDetector")
+                                        if cd and fireclickdetector then
+                                            fireclickdetector(cd)
+                                        end
+                                        
+                                        local prompt = obj:FindFirstChildOfClass("ProximityPrompt") or handle:FindFirstChildOfClass("ProximityPrompt")
+                                        if prompt and fireproximityprompt then
+                                            fireproximityprompt(prompt)
+                                        end
+                                        
                                         task.wait(0.3)
                                     end
                                 end
@@ -306,6 +321,16 @@ ItemTab:AddToggle({
         end
     end
 })
+
+-- SỰ KIỆN ẨN / HIỆN MENU BẰNG PHÍM RIGHT SHIFT
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.RightShift then
+        local gui = game:GetService("CoreGui"):FindFirstChild("Orion") or game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Orion")
+        if gui then
+            gui.Enabled = not gui.Enabled
+        end
+    end
+end)
 
 -- TỰ GIỮ CHỈ SỐ KHI RESET / CHẾT
 LocalPlayer.CharacterAdded:Connect(function(char)
