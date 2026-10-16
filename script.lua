@@ -1,10 +1,12 @@
 -- =======================================================
--- CIRNO HUB - YBA SCRIPT (100% ORIGINAL - NO COPY)
+-- CIRNO HUB - YBA SCRIPT (100% ORIGINAL)
 -- Created for: Cirno Hub
+-- Toggle Key: Right Shift (Shift Phải)
 -- =======================================================
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
 -- Xóa GUI cũ nếu đã mở trước đó
@@ -22,12 +24,12 @@ ScreenGui.ResetOnSpawn = false
 -- 2. TẠO FRAME CHÍNH (BẢNG MENU)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 320, 0, 260)
-MainFrame.Position = UDim2.new(0.5, -160, 0.4, -130)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 25, 35) -- Màu xanh băng giá Cirno
+MainFrame.Size = UDim2.new(0, 330, 0, 270)
+MainFrame.Position = UDim2.new(0.5, -165, 0.4, -135)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 25, 35)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
-MainFrame.Draggable = true -- Bấm giữ chuột để kéo đi toàn màn hình
+MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
 local MainCorner = Instance.new("UICorner")
@@ -37,7 +39,7 @@ MainCorner.Parent = MainFrame
 -- 3. TIÊU ĐỀ CIRNO HUB
 local TitleBar = Instance.new("TextLabel")
 TitleBar.Size = UDim2.new(1, 0, 0, 40)
-TitleBar.BackgroundColor3 = Color3.fromRGB(0, 130, 215) -- Màu xanh đặc trưng của Cirno
+TitleBar.BackgroundColor3 = Color3.fromRGB(0, 130, 215)
 TitleBar.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleBar.Text = "❄️ CIRNO HUB | YBA ❄️"
 TitleBar.Font = Enum.Font.SourceSansBold
@@ -76,7 +78,7 @@ local function createButton(text, posY, color, callback)
     return btn
 end
 
--- 5. NÚT SPEED
+-- 5. NÚT CHỈNH TỐC ĐỘ (SPEED)
 local speedBtn
 speedBtn = createButton("⚡ Tốc Độ: Mặc Định (16)", 50, Color3.fromRGB(0, 150, 230), function(btn)
     if currentSpeed == 16 then
@@ -98,7 +100,7 @@ speedBtn = createButton("⚡ Tốc Độ: Mặc Định (16)", 50, Color3.fromRG
     end
 end)
 
--- 6. NÚT JUMP
+-- 6. NÚT CHỈNH NHẢY CAO (JUMP)
 local jumpBtn
 jumpBtn = createButton("🦘 Nhảy Cao: Mặc Định (50)", 100, Color3.fromRGB(230, 130, 0), function(btn)
     if currentJump == 50 then
@@ -118,11 +120,11 @@ jumpBtn = createButton("🦘 Nhảy Cao: Mặc Định (50)", 100, Color3.fromRG
     end
 end)
 
--- 7. NÚT NOCLIP
-createButton("👻 Noclip: TẮT", 150, Color3.fromRGB(200, 50, 50), function(btn)
+-- 7. NÚT ĐI XUYÊN TƯỜNG (NOCLIP)
+createButton("👻 Đi Xuyên Tường: TẮT", 150, Color3.fromRGB(200, 50, 50), function(btn)
     isNoclip = not isNoclip
     if isNoclip then
-        btn.Text = "👻 Noclip: BẬT"
+        btn.Text = "👻 Đi Xuyên Tường: ĐANG BẬT"
         btn.BackgroundColor3 = Color3.fromRGB(40, 190, 80)
         
         noclipConnection = RunService.Stepped:Connect(function()
@@ -135,7 +137,7 @@ createButton("👻 Noclip: TẮT", 150, Color3.fromRGB(200, 50, 50), function(bt
             end
         end)
     else
-        btn.Text = "👻 Noclip: TẮT"
+        btn.Text = "👻 Đi Xuyên Tường: TẮT"
         btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
         
         if noclipConnection then
@@ -145,9 +147,16 @@ createButton("👻 Noclip: TẮT", 150, Color3.fromRGB(200, 50, 50), function(bt
     end
 end)
 
--- NÚT ĐÓNG HUB
-createButton("❌ Tắt Cirno Hub", 200, Color3.fromRGB(60, 60, 70), function()
+-- NÚT BẤM ĐÓNG HOÀN TOÀN
+createButton("❌ Tắt Hẳn Cirno Hub", 200, Color3.fromRGB(60, 60, 70), function()
     ScreenGui:Destroy()
+end)
+
+-- 8. BẮT SỰ KIỆN BẤM PHÍM RIGHT SHIFT ĐỂ ẨN/HIỆN MENU
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.RightShift then
+        MainFrame.Visible = not MainFrame.Visible
+    end
 end)
 
 -- TỰ GIỮ CHỈ SỐ KHI RESET / CHẾT
@@ -159,4 +168,4 @@ LocalPlayer.CharacterAdded:Connect(function(char)
     humanoid.JumpPower = currentJump
 end)
 
-print("❄️ Cirno Hub Loaded Successfully!")
+print("❄️ Cirno Hub Đã Khởi Chạy! Bấm phím 'Right Shift' (Shift Phải) để Ẩn/Hiện Menu.")
