@@ -1,270 +1,308 @@
--- =======================================================
--- ❄️ CIRNO HUB V2 - NATIVE UI EDITION (NO EXTERNAL LIB) ❄️
--- Created for: Cirno Hub / Doge8
--- Anti-Crash & Fully Supported on Xeno / Mobile / PC
--- =======================================================
 
-local CoreGui = game:GetService("CoreGui")
+--[[
+    YBA Dark Ice UI
+    Version: 1.0.0
+    Description: Lightweight native Roblox UI template
+    No external UI libraries required.
+
+    Note:
+    This is a UI template for use in Roblox experiences
+    you own or have permission to test.
+]]
+
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
-local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local LocalPlayer = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
 
--- Xóa ScreenGui cũ nếu có
-if CoreGui:FindFirstChild("CirnoHubNative") then
-    CoreGui.CirnoHubNative:Destroy()
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Remove previous UI
+local old = playerGui:FindFirstChild("DarkIceUI")
+if old then
+    old:Destroy()
 end
 
--- TẠO SCREENGUI CHÍNH
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "CirnoHubNative"
-ScreenGui.ResetOnSpawn = false
-pcall(function() ScreenGui.Parent = CoreGui end)
-if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+-- Theme
+local BG = Color3.fromRGB(13, 18, 29)
+local PANEL = Color3.fromRGB(21, 29, 44)
+local ICE = Color3.fromRGB(90, 210, 255)
+local WHITE = Color3.fromRGB(225, 240, 255)
+local MUTED = Color3.fromRGB(125, 145, 170)
 
--- KHUNG CỬA SỔ MAIN
-local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 360, 0, 280)
-MainFrame.Position = UDim2.new(0.5, -180, 0.4, -140)
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-MainFrame.BorderSizePixel = 0
-MainFrame.Active = true
-MainFrame.Draggable = true
-MainFrame.Parent = ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "DarkIceUI"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = false
+gui.Parent = playerGui
 
-local MainUICorner = Instance.new("UICorner")
-MainUICorner.CornerRadius = UDim.new(0, 8)
-MainUICorner.Parent = MainFrame
+local main = Instance.new("Frame")
+main.Name = "Main"
+main.Size = UDim2.fromOffset(330, 365)
+main.Position = UDim2.new(0.5, -165, 0.5, -182)
+main.BackgroundColor3 = BG
+main.BorderSizePixel = 0
+main.Parent = gui
 
--- TIÊU ĐỀ MENU
-local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(1, -10, 0, 35)
-TitleLabel.Position = UDim2.new(0, 10, 0, 0)
-TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "❄️ CIRNO HUB V2 | YBA EDITION ❄️"
-TitleLabel.TextColor3 = Color3.fromRGB(0, 220, 255)
-TitleLabel.TextSize = 15
-TitleLabel.Font = Enum.Font.SourceSansBold
-TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-TitleLabel.Parent = MainFrame
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 12)
+corner.Parent = main
 
--- NÚT ĐÓN/ẨN QUICK TOGGLE
-local CloseBtn = Instance.new("TextButton")
-CloseBtn.Size = UDim2.new(0, 25, 0, 25)
-CloseBtn.Position = UDim2.new(1, -30, 0, 5)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-CloseBtn.Text = "X"
-CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-CloseBtn.Font = Enum.Font.SourceSansBold
-CloseBtn.TextSize = 14
-CloseBtn.Parent = MainFrame
+local stroke = Instance.new("UIStroke")
+stroke.Color = ICE
+stroke.Transparency = 0.35
+stroke.Thickness = 1.3
+stroke.Parent = main
 
-local CloseCorner = Instance.new("UICorner")
-CloseCorner.CornerRadius = UDim.new(0, 4)
-CloseCorner.Parent = CloseBtn
+-- Header
+local header = Instance.new("Frame")
+header.Size = UDim2.new(1, 0, 0, 58)
+header.BackgroundColor3 = PANEL
+header.BorderSizePixel = 0
+header.Parent = main
 
-CloseBtn.MouseButton1Click:Connect(function()
-    MainFrame.Visible = false
-end)
+local headerCorner = Instance.new("UICorner")
+headerCorner.CornerRadius = UDim.new(0, 12)
+headerCorner.Parent = header
 
--- VÙNG CHỨA CÁC NÚT (SCROLL)
-local Container = Instance.new("ScrollingFrame")
-Container.Size = UDim2.new(1, -20, 1, -45)
-Container.Position = UDim2.new(0, 10, 0, 40)
-Container.BackgroundTransparency = 1
-Container.ScrollBarThickness = 4
-Container.Parent = MainFrame
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -65, 0, 27)
+title.Position = UDim2.fromOffset(15, 7)
+title.BackgroundTransparency = 1
+title.Text = "DARK ICE"
+title.TextColor3 = ICE
+title.Font = Enum.Font.GothamBold
+title.TextSize = 19
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = header
 
-local UIListLayout = Instance.new("UIListLayout")
-UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Padding = UDim.new(0, 8)
-UIListLayout.Parent = Container
+local subtitle = Instance.new("TextLabel")
+subtitle.Size = UDim2.new(1, -65, 0, 18)
+subtitle.Position = UDim2.fromOffset(16, 32)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = "YBA  /  NATIVE INTERFACE"
+subtitle.TextColor3 = MUTED
+subtitle.Font = Enum.Font.Gotham
+subtitle.TextSize = 10
+subtitle.TextXAlignment = Enum.TextXAlignment.Left
+subtitle.Parent = header
 
--- KHO BIẾN HỆ THỐNG
-local speedEnabled = false
-local customSpeed = 50
-local isNoclip = false
-local isItemTween = false
-local itemTweenSpeed = 150
-local playerEspEnabled = false
-local itemEspEnabled = false
-local hitboxEnabled = false
+local close = Instance.new("TextButton")
+close.Size = UDim2.fromOffset(34, 34)
+close.Position = UDim2.new(1, -44, 0, 12)
+close.BackgroundColor3 = Color3.fromRGB(45, 58, 77)
+close.Text = "X"
+close.TextColor3 = WHITE
+close.Font = Enum.Font.GothamBold
+close.TextSize = 15
+close.Parent = header
 
--- HAM TẠO NÚT TOGGLE
-local function CreateToggle(text, callback)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -10, 0, 32)
-    btn.BackgroundColor3 = Color3.fromRGB(40, 45, 60)
-    btn.Text = "[ OFF ]  " .. text
-    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    btn.Font = Enum.Font.SourceSansBold
-    btn.TextSize = 14
-    btn.Parent = Container
+Instance.new("UICorner", close).CornerRadius = UDim.new(0, 8)
 
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
+-- Content list
+local content = Instance.new("ScrollingFrame")
+content.Name = "Content"
+content.Position = UDim2.fromOffset(12, 70)
+content.Size = UDim2.new(1, -24, 1, -82)
+content.BackgroundTransparency = 1
+content.BorderSizePixel = 0
+content.ScrollBarThickness = 3
+content.ScrollBarImageColor3 = ICE
+content.CanvasSize = UDim2.new()
+content.AutomaticCanvasSize = Enum.AutomaticSize.Y
+content.Parent = main
 
-    local state = false
-    btn.MouseButton1Click:Connect(function()
-        state = not state
-        if state then
-            btn.BackgroundColor3 = Color3.fromRGB(0, 150, 220)
-            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            btn.Text = "[ ON ]  " .. text
-        else
-            btn.BackgroundColor3 = Color3.fromRGB(40, 45, 60)
-            btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-            btn.Text = "[ OFF ]  " .. text
+local list = Instance.new("UIListLayout")
+list.Padding = UDim.new(0, 9)
+list.SortOrder = Enum.SortOrder.LayoutOrder
+list.Parent = content
+
+local padding = Instance.new("UIPadding")
+padding.PaddingBottom = UDim.new(0, 6)
+padding.Parent = content
+
+local function makeRow(height)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, -5, 0, height)
+    row.BackgroundColor3 = PANEL
+    row.BorderSizePixel = 0
+    row.Parent = content
+
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
+    return row
+end
+
+local function makeToggle(labelText, callback)
+    local row = makeRow(45)
+
+    local label = Instance.new("TextLabel")
+    label.Position = UDim2.fromOffset(12, 0)
+    label.Size = UDim2.new(1, -80, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = labelText
+    label.TextColor3 = WHITE
+    label.Font = Enum.Font.GothamMedium
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = row
+
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.fromOffset(48, 25)
+    button.Position = UDim2.new(1, -60, 0.5, -12)
+    button.BackgroundColor3 = Color3.fromRGB(48, 57, 73)
+    button.Text = "OFF"
+    button.TextColor3 = WHITE
+    button.Font = Enum.Font.GothamBold
+    button.TextSize = 10
+    button.Parent = row
+
+    Instance.new("UICorner", button).CornerRadius = UDim.new(1, 0)
+
+    local enabled = false
+
+    button.Activated:Connect(function()
+        enabled = not enabled
+
+        local target = enabled and ICE
+            or Color3.fromRGB(48, 57, 73)
+
+        TweenService:Create(
+            button,
+            TweenInfo.new(0.15),
+            {BackgroundColor3 = target}
+        ):Play()
+
+        button.Text = enabled and "ON" or "OFF"
+
+        if callback then
+            local ok, err = pcall(callback, enabled)
+            if not ok then
+                warn("[Dark Ice] Toggle error:", err)
+            end
         end
-        callback(state)
     end)
-    return btn
+
+    return function()
+        return enabled
+    end
 end
 
--- =======================================================
--- TẠO CÁC NÚT CHỨC NĂNG
--- =======================================================
+local function makeSlider(labelText, minValue, maxValue, defaultValue, callback)
+    local row = makeRow(67)
 
--- 1. SPEED HACK
-CreateToggle("Bật Speed Hack (Tốc Độ 50)", function(val)
-    speedEnabled = val
-end)
+    local label = Instance.new("TextLabel")
+    label.Position = UDim2.fromOffset(12, 5)
+    label.Size = UDim2.new(1, -24, 0, 20)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = WHITE
+    label.Text = labelText
+    label.Font = Enum.Font.GothamMedium
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = row
 
-RunService.Heartbeat:Connect(function()
-    if speedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid.WalkSpeed = customSpeed
-    end
-end)
+    local valueLabel = Instance.new("TextLabel")
+    valueLabel.Size = UDim2.fromOffset(50, 20)
+    valueLabel.Position = UDim2.new(1, -62, 0, 5)
+    valueLabel.BackgroundTransparency = 1
+    valueLabel.TextColor3 = ICE
+    valueLabel.Font = Enum.Font.GothamBold
+    valueLabel.TextSize = 12
+    valueLabel.Text = tostring(defaultValue)
+    valueLabel.Parent = row
 
--- 2. NOCLIP
-local noclipConn = nil
-CreateToggle("Đi Xuyên Tường (Noclip)", function(val)
-    isNoclip = val
-    if isNoclip then
-        noclipConn = RunService.Stepped:Connect(function()
-            if LocalPlayer.Character then
-                for _, p in pairs(LocalPlayer.Character:GetDescendants()) do
-                    if p:IsA("BasePart") then p.CanCollide = false end
-                end
-            end
-        end)
-    else
-        if noclipConn then noclipConn:Disconnect() noclipConn = nil end
-    end
-end)
+    local track = Instance.new("Frame")
+    track.Position = UDim2.new(0, 12, 0, 39)
+    track.Size = UDim2.new(1, -24, 0, 6)
+    track.BackgroundColor3 = Color3.fromRGB(48, 57, 73)
+    track.BorderSizePixel = 0
+    track.Parent = row
 
--- 3. HITBOX EXPANDER
-CreateToggle("Hitbox Expander (Mở Rộng Tầm Đánh)", function(val)
-    hitboxEnabled = val
-end)
+    Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
 
-RunService.Heartbeat:Connect(function()
-    if hitboxEnabled then
-        pcall(function()
-            for _, p in pairs(Players:GetPlayers()) do
-                if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                    local hrp = p.Character.HumanoidRootPart
-                    hrp.Size = Vector3.new(10, 10, 10)
-                    hrp.Transparency = 0.6
-                    hrp.CanCollide = false
-                end
-            end
-        end)
-    end
-end)
+    local fill = Instance.new("Frame")
+    fill.Size = UDim2.new(
+        (defaultValue - minValue) / (maxValue - minValue), 0, 1, 0
+    )
+    fill.BackgroundColor3 = ICE
+    fill.BorderSizePixel = 0
+    fill.Parent = track
 
--- 4. PLAYER ESP
-CreateToggle("Player ESP (Nhìn Xuyên Tường Người)", function(val)
-    playerEspEnabled = val
-    if not playerEspEnabled then
-        for _, p in pairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character then
-                local hl = p.Character:FindFirstChild("CirnoPlayerESP")
-                if hl then hl:Destroy() end
+    Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
+
+    local dragging = false
+    local value = defaultValue
+
+    local function update(inputX)
+        local ratio = math.clamp(
+            (inputX - track.AbsolutePosition.X) / track.AbsoluteSize.X,
+            0, 1
+        )
+
+        value = math.floor(minValue + ratio * (maxValue - minValue))
+        fill.Size = UDim2.new(ratio, 0, 1, 0)
+        valueLabel.Text = tostring(value)
+
+        if callback then
+            local ok, err = pcall(callback, value)
+            if not ok then
+                warn("[Dark Ice] Slider error:", err)
             end
         end
     end
-end)
 
-RunService.Heartbeat:Connect(function()
-    if playerEspEnabled then
-        pcall(function()
-            for _, p in pairs(Players:GetPlayers()) do
-                if p ~= LocalPlayer and p.Character then
-                    if not p.Character:FindFirstChild("CirnoPlayerESP") then
-                        local hl = Instance.new("Highlight")
-                        hl.Name = "CirnoPlayerESP"
-                        hl.FillColor = Color3.fromRGB(255, 50, 50)
-                        hl.Parent = p.Character
-                    end
-                end
-            end
-        end)
-    end
-end)
-
--- 5. ITEM ESP
-CreateToggle("Item ESP (Nhìn Xuyên Tường Item)", function(val)
-    itemEspEnabled = val
-    if not itemEspEnabled then
-        for _, obj in pairs(Workspace:GetChildren()) do
-            local hl = obj:FindFirstChild("CirnoItemESP")
-            if hl then hl:Destroy() end
-            local bg = obj:FindFirstChild("CirnoItemTag")
-            if bg then bg:Destroy() end
+    track.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            update(input.Position.X)
         end
-    end
-end)
+    end)
 
-task.spawn(function()
-    while task.wait(1) do
-        if itemEspEnabled then
-            pcall(function()
-                for _, obj in pairs(Workspace:GetChildren()) do
-                    if obj.Name == "Arrow" or obj.Name == "Rokakaka" or obj.Name == "Mysterious Arrow" or obj.Name == "RIP Diary" or obj.Name == "Pure Rokakaka" then
-                        if not obj:FindFirstChild("CirnoItemESP") then
-                            local hl = Instance.new("Highlight")
-                            hl.Name = "CirnoItemESP"
-                            hl.FillColor = Color3.fromRGB(0, 255, 255)
-                            hl.Parent = obj
-                            
-                            local bg = Instance.new("BillboardGui")
-                            bg.Name = "CirnoItemTag"
-                            bg.Size = UDim2.new(0, 100, 0, 30)
-                            bg.StudsOffset = Vector3.new(0, 2, 0)
-                            bg.AlwaysOnTop = true
-                            bg.Parent = obj
-                            
-                            local txt = Instance.new("TextLabel")
-                            txt.Size = UDim2.new(1, 0, 1, 0)
-                            txt.BackgroundTransparency = 1
-                            txt.TextColor3 = Color3.fromRGB(0, 255, 255)
-                            txt.Text = "📦 " .. obj.Name
-                            txt.TextSize = 12
-                            txt.Font = Enum.Font.SourceSansBold
-                            txt.Parent = bg
-                        end
-                    end
-                end
-            end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (
+            input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch
+        ) then
+            update(input.Position.X)
         end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+end
+
+-- Demo controls: callbacks are placeholders for your own experience.
+makeToggle("Demo Toggle", function(enabled)
+    print("[Dark Ice] Demo Toggle:", enabled)
+end)
+
+makeSlider("Demo Slider", 1, 100, 50, function(value)
+    -- Example setting value; no movement exploit is applied.
+end)
+
+makeToggle("UI Animation", function(enabled)
+    print("[Dark Ice] UI Animation:", enabled)
+end)
+
+local function setVisible(visible)
+    main.Visible = visible
+end
+
+close.Activated:Connect(function()
+    setVisible(false)
+end)
+
+UserInputService.InputBegan:Connect(function(input, processed)
+    if processed then return end
+
+    if input.KeyCode == Enum.KeyCode.RightShift then
+        setVisible(not main.Visible)
     end
 end)
 
--- 6. AUTO TWEEN & PICKUP ITEM
-CreateToggle("Auto Tween & Pickup Item (Tự Bay Lượm)", function(val)
-    isItemTween = val
-    if isItemTween then
-        task.spawn(function()
-            while isItemTween do
-                pcall(function()
-                    local char = LocalPlayer.Character
-                    if char and char:FindFirstChild("HumanoidRootPart") then
-                        local hrp = char.HumanoidRootPart
-                        for _, obj in pairs(Workspace:GetChildren()) do
-                            if not isItemTween then break end
-                            if obj
+print("[Dark Ice] UI loaded successfully.")
