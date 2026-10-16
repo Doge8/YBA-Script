@@ -1,8 +1,7 @@
 --[[
-     Cirno Hub V2 - Dark Ice Edition
+    Cirno Hub V2 - Dark Ice Edition (Stable & Fixed)
     Target: Your Bizarre Adventure (YBA)
-    UI Framework: Native Dark Ice UI (No External Libs)
-    Hotkeys: Right Shift (Toggle UI)
+    Toggle Key: Right Shift
 ]]
 
 local Players = game:GetService("Players")
@@ -10,15 +9,16 @@ local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
+local CoreGui = game:GetService("CoreGui")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Xóa UI cũ nếu có
-local old = playerGui:FindFirstChild("DarkIceUI")
-if old then
-    old:Destroy()
-end
+-- XÓA UI CŨ TRÁNH BỊ TRÙNG
+pcall(function()
+    if CoreGui:FindFirstChild("DarkIceUI") then CoreGui.DarkIceUI:Destroy() end
+    if playerGui:FindFirstChild("DarkIceUI") then playerGui.DarkIceUI:Destroy() end
+end)
 
 -- BẢNG MÀU THEME DARK ICE
 local BG = Color3.fromRGB(13, 18, 29)
@@ -27,12 +27,18 @@ local ICE = Color3.fromRGB(90, 210, 255)
 local WHITE = Color3.fromRGB(225, 240, 255)
 local MUTED = Color3.fromRGB(125, 145, 170)
 
--- TẠO SCREENGUI
+-- TẠO SCREENGUI AN TOÀN CHO XENO
 local gui = Instance.new("ScreenGui")
 gui.Name = "DarkIceUI"
 gui.ResetOnSpawn = false
-gui.IgnoreGuiInset = false
-gui.Parent = playerGui
+gui.IgnoreGuiInset = true
+
+local success = pcall(function()
+    gui.Parent = CoreGui
+end)
+if not success then
+    gui.Parent = playerGui
+end
 
 -- TẠO KHUNG CỬA SỔ CHÍNH (MAIN)
 local main = Instance.new("Frame")
@@ -43,6 +49,7 @@ main.BackgroundColor3 = BG
 main.BorderSizePixel = 0
 main.Active = true
 main.Draggable = true
+main.Visible = true
 main.Parent = gui
 
 local corner = Instance.new("UICorner")
@@ -100,7 +107,7 @@ close.Parent = header
 
 Instance.new("UICorner", close).CornerRadius = UDim.new(0, 8)
 
--- CONTENT LIST (DANH SÁCH CHỨC NĂNG SCROLL)
+-- CONTENT LIST
 local content = Instance.new("ScrollingFrame")
 content.Name = "Content"
 content.Position = UDim2.fromOffset(12, 70)
@@ -122,7 +129,6 @@ local padding = Instance.new("UIPadding")
 padding.PaddingBottom = UDim.new(0, 6)
 padding.Parent = content
 
--- HÀM TẠO DÒNG KHUNG UI
 local function makeRow(height)
     local row = Instance.new("Frame")
     row.Size = UDim2.new(1, -5, 0, height)
@@ -134,7 +140,6 @@ local function makeRow(height)
     return row
 end
 
--- HÀM TẠO NÚT TOGGLE
 local function makeToggle(labelText, callback)
     local row = makeRow(45)
 
@@ -171,15 +176,13 @@ local function makeToggle(labelText, callback)
         button.Text = enabled and "ON" or "OFF"
 
         if callback then
-            local ok, err = pcall(callback, enabled)
-            if not ok then warn("[Dark Ice] Toggle error:", err) end
+            pcall(callback, enabled)
         end
     end)
 
     return function() return enabled end
 end
 
--- HÀM TẠO THANH SLIDER
 local function makeSlider(labelText, minValue, maxValue, defaultValue, callback)
     local row = makeRow(67)
 
@@ -222,17 +225,15 @@ local function makeSlider(labelText, minValue, maxValue, defaultValue, callback)
     Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
 
     local dragging = false
-    local value = defaultValue
 
     local function update(inputX)
         local ratio = math.clamp((inputX - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
-        value = math.floor(minValue + ratio * (maxValue - minValue))
+        local value = math.floor(minValue + ratio * (maxValue - minValue))
         fill.Size = UDim2.new(ratio, 0, 1, 0)
         valueLabel.Text = tostring(value)
 
         if callback then
-            local ok, err = pcall(callback, value)
-            if not ok then warn("[Dark Ice] Slider error:", err) end
+            pcall(callback, value)
         end
     end
 
@@ -257,7 +258,7 @@ local function makeSlider(labelText, minValue, maxValue, defaultValue, callback)
 end
 
 -- =======================================================
--- KHO LOGIC CHỨC NĂNG GIAO DIỆN CIRNO HUB V2
+-- KHO LOGIC CHỨC NĂNG (CHẠY NGẦM AN TOÀN)
 -- =======================================================
 
 local speedEnabled = false
@@ -271,7 +272,6 @@ local itemEspEnabled = false
 local isItemTween = false
 local itemTweenSpeed = 150
 
--- 1. SPEED HACK (KHÓA CỨNG TỐC ĐỘ CHỐNG YBA RESET)
 makeToggle("Bật Speed Hack", function(enabled)
     speedEnabled = enabled
 end)
@@ -286,7 +286,6 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- 2. JUMP POWER (LỰC NHẢY)
 makeSlider("JumpPower (Lực Nhảy)", 50, 300, 50, function(val)
     customJump = val
     if player.Character and player.Character:FindFirstChild("Humanoid") then
@@ -295,7 +294,6 @@ makeSlider("JumpPower (Lực Nhảy)", 50, 300, 50, function(val)
     end
 end)
 
--- 3. NOCLIP (ĐI XUYÊN TƯỜNG)
 local noclipConn = nil
 makeToggle("Đi Xuyên Tường (Noclip)", function(enabled)
     isNoclip = enabled
@@ -312,7 +310,6 @@ makeToggle("Đi Xuyên Tường (Noclip)", function(enabled)
     end
 end)
 
--- 4. HITBOX EXPANDER
 makeToggle("Hitbox Expander", function(enabled)
     hitboxEnabled = enabled
 end)
@@ -336,7 +333,6 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- 5. PLAYER ESP
 makeToggle("Player ESP (Nhìn Người)", function(enabled)
     playerEspEnabled = enabled
     if not playerEspEnabled then
@@ -356,3 +352,124 @@ RunService.Heartbeat:Connect(function()
                 if p ~= player and p.Character then
                     if not p.Character:FindFirstChild("CirnoPlayerESP") then
                         local hl = Instance.new("Highlight")
+                        hl.Name = "CirnoPlayerESP"
+                        hl.FillColor = Color3.fromRGB(255, 60, 60)
+                        hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+                        hl.Parent = p.Character
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+makeToggle("Item ESP (Nhìn Item)", function(enabled)
+    itemEspEnabled = enabled
+    if not itemEspEnabled then
+        for _, obj in pairs(Workspace:GetChildren()) do
+            local hl = obj:FindFirstChild("CirnoItemESP")
+            if hl then hl:Destroy() end
+            local bg = obj:FindFirstChild("CirnoItemTag")
+            if bg then bg:Destroy() end
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(1) do
+        if itemEspEnabled then
+            pcall(function()
+                for _, obj in pairs(Workspace:GetChildren()) do
+                    if obj.Name == "Arrow" or obj.Name == "Rokakaka" or obj.Name == "Mysterious Arrow" or obj.Name == "RIP Diary" or obj.Name == "Pure Rokakaka" then
+                        if not obj:FindFirstChild("CirnoItemESP") then
+                            local hl = Instance.new("Highlight")
+                            hl.Name = "CirnoItemESP"
+                            hl.FillColor = ICE
+                            hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+                            hl.Parent = obj
+
+                            local bg = Instance.new("BillboardGui")
+                            bg.Name = "CirnoItemTag"
+                            bg.Size = UDim2.new(0, 100, 0, 30)
+                            bg.StudsOffset = Vector3.new(0, 2, 0)
+                            bg.AlwaysOnTop = true
+                            bg.Parent = obj
+
+                            local txt = Instance.new("TextLabel")
+                            txt.Size = UDim2.new(1, 0, 1, 0)
+                            txt.BackgroundTransparency = 1
+                            txt.TextColor3 = ICE
+                            txt.Text = "📦 " + obj.Name
+                            txt.TextSize = 12
+                            txt.Font = Enum.Font.GothamBold
+                            txt.Parent = bg
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+makeSlider("Bay Tới Item Speed", 50, 300, 150, function(val)
+    itemTweenSpeed = val
+end)
+
+makeToggle("Auto Bay & Lượm Item", function(enabled)
+    isItemTween = enabled
+    if isItemTween then
+        task.spawn(function()
+            while isItemTween do
+                pcall(function()
+                    local char = player.Character
+                    if char and char:FindFirstChild("HumanoidRootPart") then
+                        local hrp = char.HumanoidRootPart
+                        for _, obj in pairs(Workspace:GetChildren()) do
+                            if not isItemTween then break end
+                            if obj.Name == "Arrow" or obj.Name == "Rokakaka" or obj.Name == "Mysterious Arrow" or obj.Name == "RIP Diary" or obj.Name == "Pure Rokakaka" then
+                                local handle = obj:FindFirstChild("Handle") or obj:FindFirstChildOfClass("BasePart")
+                                if handle then
+                                    local distance = (hrp.Position - handle.Position).Magnitude
+                                    local time = distance / itemTweenSpeed
+                                    local info = TweenInfo.new(time, Enum.EasingStyle.Linear)
+                                    local tween = TweenService:Create(hrp, info, {CFrame = handle.CFrame + Vector3.new(0, 2, 0)})
+                                    tween:Play()
+                                    tween.Completed:Wait()
+
+                                    task.wait(0.1)
+                                    local cd = obj:FindFirstChildOfClass("ClickDetector") or handle:FindFirstChildOfClass("ClickDetector")
+                                    if cd and fireclickdetector then fireclickdetector(cd) end
+                                    local prompt = obj:FindFirstChildOfClass("ProximityPrompt") or handle:FindFirstChildOfClass("ProximityPrompt")
+                                    if prompt and fireproximityprompt then fireproximityprompt(prompt) end
+                                    task.wait(0.3)
+                                end
+                            end
+                        end
+                    end
+                end)
+                task.wait(1)
+            end
+        end)
+    end
+end)
+
+-- ẨN / HIỆN CỬA SỔ MENU
+close.Activated:Connect(function()
+    main.Visible = false
+end)
+
+UserInputService.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    if input.KeyCode == Enum.KeyCode.RightShift then
+        main.Visible = not main.Visible
+    end
+end)
+
+player.CharacterAdded:Connect(function(char)
+    local humanoid = char:WaitForChild("Humanoid")
+    task.wait(0.5)
+    humanoid.UseJumpPower = true
+    humanoid.JumpPower = customJump
+end)
+
+print("[Cirno Hub V2] UI Loaded Successfully!")
