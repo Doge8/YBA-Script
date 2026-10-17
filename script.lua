@@ -1,18 +1,14 @@
-
 --[[
     YBA Dark Ice UI
-    Version: 1.0.0
-    Description: Lightweight native Roblox UI template
+    Version: 1.1.0
+    Description: Original native UI template + Speed toggle.
     No external UI libraries required.
-
-    Note:
-    This is a UI template for use in Roblox experiences
-    you own or have permission to test.
 ]]
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -234,8 +230,13 @@ local function makeSlider(labelText, minValue, maxValue, defaultValue, callback)
     local value = defaultValue
 
     local function update(inputX)
+        local trackWidth = track.AbsoluteSize.X
+        if trackWidth <= 0 then
+            return
+        end
+
         local ratio = math.clamp(
-            (inputX - track.AbsolutePosition.X) / track.AbsoluteSize.X,
+            (inputX - track.AbsolutePosition.X) / trackWidth,
             0, 1
         )
 
@@ -276,13 +277,43 @@ local function makeSlider(labelText, minValue, maxValue, defaultValue, callback)
     end)
 end
 
--- Demo controls: callbacks are placeholders for your own experience.
-makeToggle("Demo Toggle", function(enabled)
-    print("[Dark Ice] Demo Toggle:", enabled)
+-- Speed hack settings
+local speedValue = 50
+local speedConnection = nil
+local originalWalkSpeed = nil
+
+makeToggle("Speed Hack", function(enabled)
+    -- Prevent duplicate Heartbeat connections.
+    if speedConnection then
+        speedConnection:Disconnect()
+        speedConnection = nil
+    end
+
+    local character = player.Character
+    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+
+    if enabled then
+        originalWalkSpeed = humanoid and humanoid.WalkSpeed or 16
+
+        speedConnection = RunService.Heartbeat:Connect(function()
+            local currentCharacter = player.Character
+            local currentHumanoid = currentCharacter
+                and currentCharacter:FindFirstChildOfClass("Humanoid")
+
+            if currentHumanoid and currentHumanoid.WalkSpeed ~= speedValue then
+                currentHumanoid.WalkSpeed = speedValue
+            end
+        end)
+    else
+        if humanoid and originalWalkSpeed then
+            humanoid.WalkSpeed = originalWalkSpeed
+        end
+        originalWalkSpeed = nil
+    end
 end)
 
-makeSlider("Demo Slider", 1, 100, 50, function(value)
-    -- Example setting value; no movement exploit is applied.
+makeSlider("WalkSpeed", 16, 100, 50, function(value)
+    speedValue = value
 end)
 
 makeToggle("UI Animation", function(enabled)
@@ -305,4 +336,4 @@ UserInputService.InputBegan:Connect(function(input, processed)
     end
 end)
 
-print("[Dark Ice] UI loaded successfully.")
+print("[Dark Ice] UI loaded successfully. Speed toggle ready.")
